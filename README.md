@@ -34,16 +34,20 @@ To explore the properties of MSAs and how they behave different from CNNs, the a
 
 <img width="683" alt="Screenshot 2024-11-06 at 11 06 52 PM" src="https://github.com/user-attachments/assets/72ae93c6-ee29-490e-bdf9-2e9cc35c8072">
 
-This analysis demonstrates that MSAs consistently flatten the loss landscape during training. ViTs create a smoother, more trainable neural networks compared to ResNet (CNNs), demonstated by their more direct paths and smaller eigenvalues. This is significant because while large eigenvalues impede NN training, MSAs can help NNs learn better representations by suppressing these larger values. 
+This analysis demonstrates that MSAs consistently flatten the loss landscape for training. ViTs create a smoother, more trainable neural networks compared to ResNet (CNNs), demonstated by their more direct paths. Their weak inductive bias and long-range dependency produce negative Hessian eigenvalues in small data regimes, and these non-convex points disrupt NN training. Large datasets and loss landscape smoothing methods alleviate this problem.
 
 
 2. **MSA Behavior Analysis**
 
-<img width="708" alt="Screenshot 2024-11-06 at 11 21 30 PM" src="https://github.com/user-attachments/assets/6469d794-51f8-4dfe-8127-294788514e2e">
+<img width="688" alt="Screenshot 2024-11-07 at 7 32 05 AM" src="https://github.com/user-attachments/assets/d7d0ab9e-abd1-44eb-a5ce-e45e87817b76">
 
-(a) ResNet (CNNs) amplifies high frequencies, while ViT reduces high frequencies. 
+In this diagram, the behavior difference in how CNNs and ViTs process visual information is demonstrated through frequency analysis. The Fourier analysis shows that the CNN amplifies high-frequency features while ViT reduces them, effectively making them high-pass and low-pass filters respectively. The noise robustness test confirms these behaviors: ViT handles high-frequency noise better, while ResNet struggles with it. This emphasizes the complementary processing styles of CNNs and ViTs. 
 
-(b) ResNet struggles with high-frequency noise while ViT handles high frequency noise better. 
+**Question: How might you describe the role of ViTs as low pass filters in this context?**
+
+
+Low pass filters of ViTs filters out high frequency information, making them better for focusing on the big picture of an image, focusing on broader, global patterns
+
 
 3. **Network Stage Analysis**
 
@@ -53,23 +57,33 @@ This feature map variance analysis reveals:
 
 Multi-head Self-Attention (MSA) mechanisms consistently reduce the variance of feature map points, effectively acting as a stabilizing force in the network. In contrast, Convolutional Neural Networks (CNNs) tend to increase variance, creating more diverse but potentially less stable representations. This variance accumulation occurs progressively through neural network layers, with a notable pattern emerging: the feature map variance reaches peak levels at the end of each stage in ResNet architectures. This pattern suggests that strategic placement of MSA blocks could help manage and utilize this variance effectively.
 
-<img width="427" alt="Screenshot 2024-11-06 at 11 12 10 PM" src="https://github.com/user-attachments/assets/cd532337-9d4e-4f63-9a01-46163a123cfb">
+
+<img width="684" alt="Screenshot 2024-11-07 at 7 33 35 AM" src="https://github.com/user-attachments/assets/da54ff59-dcda-4661-bceb-427befb2196d">
 
 Multi-Stage behavior
 
-Neural networks with multiple stages behave essentially like a series of smaller, connected models. Each stage develops its own specialized processing characteristics, rather than functioning as a uniform processing pipeline. This finding has significant implications for architecture design, as the performance impact of different components varies dramatically depending on their position within these stages. The research shows that this staged behavior is consistent across different architectures but manifests differently between CNNs and Vision Transformers.
+Neural networks with multiple stages behave essentially like a series of smaller, connected models. Each stage develops its own specialized processing characteristics, rather than functioning as a uniform processing pipeline. This diagram reflects a shift in the model accuracy as one layer of a CNN or MSA is removed from their respective model. In ResNet, removing an early stage layers hurts accuracy more than removing a late stage layers. More importantly, removing a layer at the beginning of a stage impairs accuracy more than removing a layer at the end of a stage. In the ViT, removing an MSA bloack at the end stage seriously impairs the accuracy. This finding has significant implications for architecture design, as the performance impact of different components varies depending on their position within these stages. 
   
 ## Application: AlterNet Architecture 
-
 
 <img width="523" alt="Screenshot 2024-11-06 at 11 15 44 PM" src="https://github.com/user-attachments/assets/c5f389df-c709-4b06-9399-31464ef2811d">
 
 Comparison of three different repeating patterns 
 
-Based on the paper's insights about MSAs and CNNs exhibiting opposite behaviors, the researchers propose AlterNet, a model that leverages the complementary nature of these components. Since MSAs and Convs are low-pass and high-pass filters respectively, AlterNet strategically combines them by placing MSA blocks at the end of CNN stages. This design pattern naturally derives from the understanding that multi-stage neural networks behave like a series connection of small individual models, where components at stage endings play crucial roles in prediction.
+Based on the paper's insights about MSAs and CNNs exhibiting opposite behaviors, the researchers propose AlterNet, a model that leverages the complementary nature of these components. Since MSAs and Convs are low-pass and high-pass filters respectively, AlterNet strategically combines them by placing MSA blocks at the end of CNN stages. This design derives from the understanding that multi-stage neural networks behave like a series connection of small individual models, where components at stage endings play crucial roles in prediction.
 
+Additionally, the authors provide the following design rules: 
+- Alternately replace Conv blocks with MSA blocks from the end of a baseline CNN model.
+- If the added MSA block does not improve predictive performance, replace a Conv block located at the end of an earlier stage with an MSA block
+-  Use more heads and higher hidden dimensions for MSA blocks in late stages.
+  
+**Question: What are some reasons why a hybrid model might benefit from placing MSA blocks at the end of the model?**
 
-<img width="624" alt="Screenshot 2024-11-06 at 11 16 24 PM" src="https://github.com/user-attachments/assets/ebb04f10-4958-44b5-b856-5273283cf2d5">
+- CNNs progressively increase feature map variance as information moves through the network, and by placing MSAs at stage ends, they can effectively manage the accumulated variance.
+- CNNs placed in earlier in stages extract detailed features and local patterns, whereas MSAs at stage ends aggregate these features. This ordering takes advantage of each component's strengths, where CNNs handle the initial detailed processing and MSAs smooth and integrate the processed information. This results in more refined and robust features.
+  
+
+<img width="574" alt="Screenshot 2024-11-07 at 7 20 36 AM" src="https://github.com/user-attachments/assets/4cc6bea4-0848-49ec-8878-133e26f01c7b">
 
 Detailed AlterNet architecture:
 1. Progressive Scaling: MSAs in stages 1 to 4 systematically increase in complexity with 3, 6, 12, and 24 heads respectively
@@ -77,7 +91,7 @@ Detailed AlterNet architecture:
 3. Balanced Processing: Alternates between traditional Conv blocks and attention mechanisms
 4. Systematic Organization: Based on pre-activation ResNet-50 structure with strategic modifications
 
-<img width="696" alt="Screenshot 2024-11-06 at 11 18 23 PM" src="https://github.com/user-attachments/assets/6ae43afc-d5f2-46e4-8e86-c7ca53216b0e">
+<img width="631" alt="Screenshot 2024-11-07 at 7 46 25 AM" src="https://github.com/user-attachments/assets/7bcee0fc-cc00-4d05-8dce-cf44aac4c07f">
 
 Performance of AlterNet vs. CNNs and ViTs
 
@@ -89,7 +103,7 @@ The study reveals that Multi-head Self-Attention mechanisms improve neural netwo
 
 2. Complementary Behavior of MSAs and CNNs
    
-One of the most significant discoveries is the fundamentally different yet complementary nature of MSAs and CNNs. MSAs function as low-pass filters, effectively smoothing and aggregating information across feature maps. In contrast, CNNs act as high-pass filters, emphasizing fine details and local patterns. This difference explains their varying robustness to noise: MSAs handle high-frequency noise effectively because they naturally filter it out, while CNNs struggle with such noise because they amplify it. This complementary relationship suggests that combining both approaches could lead to more robust architectures.
+One of the most significant discoveries is the complementary nature of MSAs and CNNs. MSAs function as low-pass filters, effectively smoothing and aggregating information across feature maps. In contrast, CNNs act as high-pass filters, emphasizing fine details and local patterns. This difference explains their varying robustness to noise: MSAs handle high-frequency noise effectively because they naturally filter it out, while CNNs struggle with such noise because they amplify it. This complementary relationship suggests that combining both approaches could lead to more robust architectures.
 
 3. Multi-stage Network Functionality
    
@@ -119,15 +133,14 @@ The complementary nature of MSAs and CNNs suggests potential for even more sophi
 
 Park, N., & Kim, S. (2022). How Do Vision Transformers Work? Published as a conference paper at ICLR 2022. arXiv:2202.06709.
 
+ Original Transformer Paper link: https://arxiv.org/abs/1706.03762
+ 
 ## Resource Links
 
 1. Paper Implementation: https://github.com/xxxnell/how-do-vits-work
-2. Vision Transformer Introduction: https://arxiv.org/abs/2010.11929
-3. Original Transformer Paper: https://arxiv.org/abs/1706.03762
-
-
-
-
-
+2. Slide Presentaion on paper: https://github.com/xxxnell/how-do-vits-work-storage/blob/master/resources/how_do_vits_work_poster_iclr2022.pdf
+3. Related Paper: "Blurs Behave Like Ensembles: Spatial Smoothings to Improve Accuracy, Uncertainty, and Robustness" https://arxiv.org/abs/2105.12639 
+4. Related paper: "On the Adversarial Robustness of Visual Transformers" https://arxiv.org/abs/2103.15670)
+5. Related paper: "Convolutional neural networks meet vision transformers" https://arxiv.org/abs/2107.06263 
 
 
