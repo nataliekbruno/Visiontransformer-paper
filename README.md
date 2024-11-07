@@ -55,7 +55,7 @@ Low pass filters of ViTs filters out high frequency information, making them bet
 
 This feature map variance analysis reveals: 
 
-Multi-head Self-Attention (MSA) mechanisms consistently reduce the variance of feature map points, effectively acting as a stabilizing force in the network. In contrast, Convolutional Neural Networks (CNNs) tend to increase variance, creating more diverse but potentially less stable representations. This variance accumulation occurs progressively through neural network layers, with a notable pattern emerging: the feature map variance reaches peak levels at the end of each stage in ResNet architectures. This pattern suggests that strategic placement of MSA blocks could help manage and utilize this variance effectively.
+MSA mechanisms consistently reduce the variance of feature map points, effectively acting as a stabilizing force in the network. In contrast, CNNs tend to increase variance, creating more diverse but potentially less stable representations. This variance accumulation occurs progressively through neural network layers, with a notable pattern emerging: the feature map variance reaches peak levels at the end of each stage in ResNet architectures. This pattern suggests that strategic placement of MSA blocks could help manage and utilize this variance effectively.
 
 
 <img width="684" alt="Screenshot 2024-11-07 at 7 33 35 AM" src="https://github.com/user-attachments/assets/da54ff59-dcda-4661-bceb-427befb2196d">
@@ -73,8 +73,8 @@ Comparison of three different repeating patterns
 Based on the paper's insights about MSAs and CNNs exhibiting opposite behaviors, the researchers propose AlterNet, a model that leverages the complementary nature of these components. Since MSAs and Convs are low-pass and high-pass filters respectively, AlterNet strategically combines them by placing MSA blocks at the end of CNN stages. This design derives from the understanding that multi-stage neural networks behave like a series connection of small individual models, where components at stage endings play crucial roles in prediction.
 
 Additionally, the authors provide the following design rules: 
-- Alternately replace Conv blocks with MSA blocks from the end of a baseline CNN model.
-- If the added MSA block does not improve predictive performance, replace a Conv block located at the end of an earlier stage with an MSA block
+- Alternately replace CNN blocks with MSA blocks from the end of a baseline CNN model.
+- If the added MSA block does not improve predictive performance, replace a CNN block located at the end of an earlier stage with an MSA block
 -  Use more heads and higher hidden dimensions for MSA blocks in late stages.
   
 **Question: What are some reasons why a hybrid model might benefit from placing MSA blocks at the end of the model?**
@@ -88,7 +88,7 @@ Additionally, the authors provide the following design rules:
 Detailed AlterNet architecture:
 1. Progressive Scaling: MSAs in stages 1 to 4 systematically increase in complexity with 3, 6, 12, and 24 heads respectively
 2. Strategic Placement: All stages except stage 1 end with MSA blocks
-3. Balanced Processing: Alternates between traditional Conv blocks and attention mechanisms
+3. Balanced Processing: Alternates between traditional CNN blocks and attention mechanisms
 4. Systematic Organization: Based on pre-activation ResNet-50 structure with strategic modifications
 
 <img width="631" alt="Screenshot 2024-11-07 at 7 46 25 AM" src="https://github.com/user-attachments/assets/7bcee0fc-cc00-4d05-8dce-cf44aac4c07f">
@@ -99,7 +99,7 @@ Performance of AlterNet vs. CNNs and ViTs
 
 1. MSA's Impact on Accuracy and Generalization
    
-The study reveals that Multi-head Self-Attention mechanisms improve neural network performance through two primary mechanisms. First, they consistently flatten loss landscapes, making the optimization process more stable and efficient. Second, they reduce the magnitude of Hessian eigenvalues, which directly contributes to better generalization capabilities. Importantly, these improvements stem primarily from the MSA's data-specific processing nature, rather than their ability to capture long-range dependencies as previously thought. This finding challenges the conventional wisdom about why Vision Transformers work effectively.
+The study reveals that Multi-head Self-Attention mechanisms improve neural network performance through two primary mechanisms. First, they consistently flatten loss landscapes, making the optimization process more stable and efficient. Second, they have better generalization capabilities. Importantly, these improvements stem primarily from the MSA's data-specific processing nature, rather than their ability to capture long-range dependencies as previously thought. This finding challenges the conventional ideas about why Vision Transformers work effectively.
 
 2. Complementary Behavior of MSAs and CNNs
    
@@ -107,13 +107,13 @@ One of the most significant discoveries is the complementary nature of MSAs and 
 
 3. Multi-stage Network Functionality
    
-The research demonstrates that multi-stage neural networks operate as a series of interconnected smaller models, each with distinct characteristics and roles. MSAs positioned at the end of stages play particularly crucial roles in overall network performance. Each stage contributes uniquely to the network's processing pipeline, with early stages focusing on basic feature extraction and later stages handling more complex feature integration. This understanding led to the development of more effective architectural patterns for combining MSAs and CNNs.
+The research demonstrates that multi-stage neural networks operate as a series of interconnected smaller models, each with distinct characteristics and roles. MSAs positioned at the end of stages play particular roles in overall network performance. Each stage contributes uniquely to the network's processing pipeline, with early stages focusing on basic feature extraction and later stages handling more complex feature integration. This understanding led to the development of more effective architectural patterns for combining MSAs and CNNs.
 
 
 ## Critical Analysis
 
 1. Data Scale Dependecies
-A crucial limitation emerges in the context of data scale. Vision Transformers encounter challenges with non-convex losses when working with small datasets. This problem naturally diminishes with larger datasets, but it represents a significant constraint for applications with limited data availability. The researchers found that loss landscape smoothing methods can help mitigate this issue, but it remains an important consideration for practical applications.
+A limitation emerges in the context of data scale. Vision Transformers encounter challenges with non-convex losses when working with small datasets. This problem naturally diminishes with larger datasets, but it represents a significant constraint for applications with limited data availability. The researchers found that loss landscape smoothing methods can help mitigate this issue, but it remains an important consideration for practical applications.
 
 ## Impacts 
 
@@ -127,7 +127,7 @@ The findings translate directly into practical improvements for computer vision 
 
 **Future Directions**
 
-The complementary nature of MSAs and CNNs suggests potential for even more sophisticated hybrid architectures. The understanding of stage-wise processing behaviors could lead to more efficient network designs. Additionally, the insights about loss landscape characteristics could inform the development of better training methods for deep learning models.
+The complementary nature of MSAs and CNNs suggests potential for even more hybrid architectures. The understanding of stage-wise processing behaviors could lead to more efficient network designs. Additionally, the insights about loss landscape characteristics could inform the development of better training methods for AI models.
 
 ## Citation
 
